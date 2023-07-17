@@ -1,0 +1,91 @@
+
+<html>
+  <head>
+    <title>Segunda Avaliação CG-3D</title>
+  </head>
+  <script src="math.js"></script>
+  <script src="webgl.js"></script>
+  <script src="mouse.js"></script>
+
+  <script id="vertex-shader" type="notjs">
+    attribute vec4 position;
+    attribute vec4 fcolor;
+    attribute vec4 vnormal;
+    attribute vec2 texCoord;
+
+    uniform vec3 lightPos;
+    uniform mat4 transf;
+    
+    varying vec2 v_texCoord;
+    varying vec4 color;
+    varying vec4 fnormal;
+    varying vec4 fragCoord;
+
+    void main() {
+      v_texCoord = texCoord;
+      color = fcolor;
+      fnormal = transf*vnormal;
+      fragCoord = position;
+      gl_Position = transf*position;
+    }
+  </script>
+
+  <script id="frag-shader" type="notjs">
+    precision mediump float;
+    varying vec4 color;
+    varying vec4 fnormal;
+    varying vec4 lightPos2;
+    varying vec4 fragCoord;
+    uniform vec4 ambientLight;
+    uniform vec4 diffuseIlumination;
+    uniform vec4 diffuseIluminationPos;
+    uniform vec3 cameraDirection;
+    uniform bool useTexture;
+
+    uniform sampler2D tex;
+    varying vec2 v_texCoord;
+
+    void main() {
+        float specularStrength = 0.5;
+
+        vec4 lightDir = normalize(diffuseIluminationPos-fragCoord);
+        vec4 norm     = normalize(fnormal);
+
+        vec3 viewDir    = normalize(cameraDirection - vec3(fragCoord));
+        vec3 reflectDir = reflect(-vec3(lightDir), vec3(norm));
+        float spec      = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+        vec3 specular   = specularStrength * spec * vec3(diffuseIlumination);
+
+        float diff   = max(dot(norm, -lightDir), 0.0);
+        vec3 diffuse = diff * vec3(diffuseIlumination);
+
+        if(useTexture == true) {
+          //gl_FragColor = (ambientLight + vec4(diffuse, 1.0) + vec4(specular, 1.0)) * texture2D(tex, v_texCoord);
+          //gl_FragColor = (ambientLight + vec4(diffuse, 1.0)) * texture2D(tex, v_texCoord);
+          gl_FragColor = (ambientLight + vec4(diffuse, 1.0) + vec4(specular, 1.0)) * texture2D(tex, v_texCoord);
+        } else {
+          //gl_FragColor = (ambientLight + vec4(diffuse, 1.0)) * color;
+          gl_FragColor = (ambientLight + vec4(diffuse, 1.0) + vec4(specular, 1.0)) * color;
+        }
+    }
+  </script>
+
+  <body onload="init()">
+    <h1>Segunda avaliação de Computação Gráfica</h1>
+    <div style="display: flex; padding: 5px;">
+      <div>
+        <h3>W- ANDA PRA FRENTE COM A CÂMERA</h3>
+        <h3>S- ANDA PARA TRÁS COM A CÂMERA</h3>
+      </div>
+      <div style="margin-left: 20px;">
+        <h3>A- OLHA PARA ESQUERDA COM A CÂMERA</h3>
+        <h3>D- OLHA PARA DIRETA COM A CÂMERA</h3>
+      </div>
+      <div style="margin-left: 20px;">
+        <h3> SETA PARA CIMA - ANDA PRA CIMA COM A CAMERA</h3>
+        <h3>SETA PARA BAIXO- ANDA PRA BAIXO COM A CAMERA</h3>
+      </div>
+    </div>
+    <canvas id="glcanvas1" width="800" height="800"></canvas>
+  </body>
+</html>
